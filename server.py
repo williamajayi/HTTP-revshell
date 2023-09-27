@@ -199,7 +199,20 @@ def main():
             cert = certificate.Certificate()
             if ((cert.checkCertPath() == False) or cert.checkCertificateExpiration()):
                 cert.genCertificate()
-            server.socket = ssl.wrap_socket (server.socket, certfile='certificate/cacert.pem', keyfile='certificate/private.pem', server_side=True)
+            
+            # server.socket = ssl.wrap_socket (server.socket, certfile='certificate/cacert.pem', keyfile='certificate/private.pem', server_side=True) - old code using ssl.wrap_socket
+
+            # Create an SSL context
+            context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+
+            # Load the server certificate and private key
+            context.load_cert_chain(certfile='certificate/cacert.pem', keyfile='certificate/private.pem')
+
+            # Set server side mode
+            context.set_servername_callback(None)  # Optional, for SNI support
+
+            # Wrap the server socket with the SSL context
+            server.socket = context.wrap_socket(server.socket, server_side=True)
 
         if (args.autocomplete):
             globals.AUTOCOMPLETE = True
